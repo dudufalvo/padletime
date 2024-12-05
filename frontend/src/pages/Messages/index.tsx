@@ -136,7 +136,7 @@ const Messages = () => {
   return (
     <div className={styles.main}>
       <div className={styles.table}>
-        <span>Messages</span>
+        <h2>Messages</h2>
 
         <div className={styles.forms}>
           <FormProvider {...methods}>

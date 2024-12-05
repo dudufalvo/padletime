@@ -1,0 +1,30 @@
+@import '../../styles/mixins.scss';
+
+.accountOptions {
+  @include flex(column, $align: flex-start);
+  padding: 2rem 4rem;
+
+  .accountOptionsContent {
+    @include flex(row, space-between, flex-start);
+    width: 100%;
+
+    >h1 { @include text($size: 1.5rem, $weight: 700, $height: normal); }
+    >button { padding: 0.5rem; }
+  }
+
+  >div:last-child {
+    @include flex(column, $align: flex-start);
+    width: 100%;
+  }
+}
+
+@media (max-width: 760px) {
+  .accountOptions {
+    padding: 2rem 1rem 1rem;
+
+    >div:last-child {
+      @include flex(column, $align: flex-start);
+      width: 100%;
+    }
+  }
+}

@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX already_waiting ON waitlist (interested_time);

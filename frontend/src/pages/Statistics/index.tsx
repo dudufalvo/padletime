@@ -13,7 +13,6 @@ import { ChangeEvent, useEffect, useState } from 'react'
 import SelectDropdown from 'components/SelectDropdown';
 import { DropdownOptionType } from 'types/Component';
 import { SingleValue, MultiValue } from 'react-select';
-import { set } from 'react-hook-form';
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
   [`&.${tableCellClasses.head}`]: {
@@ -111,7 +110,6 @@ const Statistics = () => {
     axios.get(`${import.meta.env.VITE_API_BASE_URL}/statistics/frequent-field/${selectedTimePeriod}`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } })
       .then((response) => {
         setReservedField([response.data])
-        toast.success('Fetched reserved field statistics')
       })
       .catch(err => {
         toast.error(err.response.data.message)
@@ -141,7 +139,6 @@ const Statistics = () => {
     axios.get(`${import.meta.env.VITE_API_BASE_URL}/statistics/fields-unused/${selectedFilterType}/${selectedFilter}`, { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } })
     .then((response) => {
       setUnusedFields(response.data)
-      toast.success('Fetched reserved field statistics')
     })
     .catch(() => {
       toast.error('Error fetching reserved field statistics')
@@ -168,7 +165,7 @@ const Statistics = () => {
   return (
     <div className={styles.main}>
       <div className={styles.table}>
-        <span>Statistics</span>
+        <h2>Statistics</h2>
         <SelectDropdown type='select' label='Select Time Period' options={[{ value: '1week', label: '1 Week' }, { value: '1month', label: '1 Month' }, { value: '1year', label: '1 Year' }]} sendOptionsToParent={handleSelectedOption} />
         <div>
           <span>Most Reserved Field</span>

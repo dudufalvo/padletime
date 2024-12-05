@@ -34,12 +34,7 @@ export const Navbar = () => {
         <div className={styles.links}>
           <a href='/reservations'className={''}>Reservations</a>
           <a href='/notifications'>Notifications</a>
-          {user?.role.includes('admin') && <a href='/messages'>Messages</a>}
-          {user?.role.includes('admin') && <a href='/fields'>Fields</a>}
-          {user?.role.includes('admin') && <a href='/prices'>Prices</a>}
-          {user?.role.includes('admin') && <a href='/admin-reservations'>Change Reservations</a>}
-          {user?.role.includes('admin') && <a href='/statistics'>Statistics</a>}
-          {user?.role.includes('admin') && <a href='/admin-panel'>Admin</a>}
+          {user?.role.includes('admin') && <a href='/admin?tab=messages'>Admin</a>}
           
           <div className={styles.dropdown}>
             <a className={styles.dropdownText} href='/account?tab=settings'>
@@ -75,8 +70,9 @@ export const Navbar = () => {
         {
           active &&
           <div className={styles.burgerMenu}>
-            <button onClick={() => navigate('/groups')} className={path.includes('group') ? styles.activeLink : ''}>Groups</button>
-            <button onClick={() => navigate('/locations')} className={path.includes('location') ? styles.activeLink : ''}>Locations</button>
+            <button onClick={() => navigate('/reservations')} className={path.includes('reservations') ? styles.activeLink : ''}>Reservations</button>
+            <button onClick={() => navigate('/notifications')} className={path.includes('notifications') ? styles.activeLink : ''}>Notifications</button>
+            {user?.role.includes('admin') && <button onClick={() => navigate('/admin?tab=messages')} className={path.includes('admin') ? styles.activeLink : ''}>Admin</button>}
             <button onClick={() => navigate({ pathname: '/account', search: '?tab=settings' })} className={styles.profile}>
               <img src='https://upload.wikimedia.org/wikipedia/commons/thumb/7/72/Avatar_icon_green.svg/2048px-Avatar_icon_green.svg.png' alt="picture" className={styles.profilePicture} />
               <span className={styles.name}>{user?.first_name.toUpperCase()}</span>

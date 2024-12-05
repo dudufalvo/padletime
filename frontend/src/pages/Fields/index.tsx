@@ -139,7 +139,7 @@ const Fields = () => {
   return (
     <div className={styles.main}>
       <div className={styles.table}>
-        <span>Fields</span>
+        <h2>Fields</h2>
 
         <div className={styles.forms}>
           <FormProvider {...methods}>

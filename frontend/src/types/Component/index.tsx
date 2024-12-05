@@ -52,6 +52,7 @@ export type DropdownOptionType = {
   value: string,
   image?: string | React.ReactNode,
   label: string,
+  id?: number,
   handle?: () => void
 }
 

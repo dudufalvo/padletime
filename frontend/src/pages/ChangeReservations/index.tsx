@@ -122,7 +122,7 @@ const ChangeReservations = () => {
   return (
     <div className={styles.main}>
       <div className={styles.table}>
-        <span>Change Reservations</span>
+        <h2>Change Reservations</h2>
 
         <div className={styles.forms}>
           <FormProvider {...methods}>

@@ -69,9 +69,9 @@ const Settings = () => {
       <h2>My Profile</h2>
       <FormProvider {...profileMethods}>
         <form className={styles.settings}>
-          <div className={styles.profileLeft}>
+          {/* <div className={styles.profileLeft}>
             <InputFile label='Profile Photo' name='image' />
-          </div>
+          </div> */}
           <div className={styles.profileRight}>
             <InputText id='first_name' name='first_name' label='First Name' placeholder='Insert your first name' />
             <InputText id='last_name' name='last_name' label='Last Name' placeholder='Insert your last name' />

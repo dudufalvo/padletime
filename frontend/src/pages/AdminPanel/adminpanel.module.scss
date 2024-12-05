@@ -1,11 +1,15 @@
 @import '../../styles/mixins.scss';
 
+.main {
+  @include size(100%);
+  @include flex(column, flex-start, flex-start, 1.5rem);
+}
+
 .table {
   display: flex;
   flex-direction: column;
   gap: 1rem;
   width: 100%;
-  padding: 1.5rem 3rem;
   border-collapse: collapse;
 
   font-family: 'Raleway', sans-serif;;

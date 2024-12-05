@@ -1,5 +1,4 @@
 import styles from './reservations.module.scss'
-import * as yup from 'yup'
 import axios from 'axios'
 import toast from 'utils/toast'
 import { styled } from '@mui/material/styles';
@@ -35,30 +34,14 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
   },
 }));
 
-type TableCheckboxType = {
-  mock_field_id: number,
-  mock_price_id: number,
-  mock_initial_time: string,
-  mock_date: string,
-  reservation_field_id?: number,
-  reservation_initial_time?: string,
-  reservation_date?: string
-}
-
-type TableMessageType = {
-  price_id: number,
-  field_id: number,
-  field_name: string,
-  initial_time: string,
-  end_time: string,
-  price_value: number,
-}
-
 type ReservationsType = {
-  date: string,
   field_id: number,
-  initial_time: string,
-  reservation_id: number
+  field: string,
+  price: string,
+  price_id: number,
+  time: string,
+  reserved: boolean,
+  waitlist: boolean
 }
 
 type FieldsType = {
@@ -85,21 +68,11 @@ const Reservations = () => {
   const [fields, setFields] = useState<FieldsType[]>([])
   const [selectedField, setSelectedField] = useState<DropdownOptionType | null>({ label: 'All', value: '0' });
   const [selectedDate, setSelectedDate] = useState<DropdownOptionType>({ label: new Date().toDateString(), value: new Date().toISOString().split('T')[0] });
-  const [selectedTime, setSelectedTime] = useState<DropdownOptionType | null>({ label: 'All', value: '0' });
+  const [selectedTime, setSelectedTime] = useState<DropdownOptionType | null>({ label: 'All', value: '0', id: 0});
   const [waitlist, setWaitlist] = useState<WaitlistType[]>([])
+  const [price_order, setPriceOrder] = useState<string>('asc')
+  const [time_order,  setTimeOrder] = useState<string>('asc')
 
-  const reservationsRows: TableMessageType[][] =  fields.map(field => {
-    return prices.map(price => {
-      return {
-        price_id: price.price_id,
-        field_id: field.field_id,
-        field_name: field.name,
-        initial_time: price.price_type.replace('FIM_SEMANA', 'FSEMANA').split('_')[1],
-        end_time: price.price_type.replace('FIM_SEMANA', 'FSEMANA').split('_')[2],
-        price_value: price.price_value
-      }
-    })
-  })
 
   const dataOptions = []
   for (let i = 0; i < 7; i++) {
@@ -111,9 +84,13 @@ const Reservations = () => {
 
   // get the different times in prices to show in the dropdown
   const timeOptions = prices.map(price => {
-    return { value: price.price_type.replace('FIM_SEMANA', 'FSEMANA').split('_')[1], label: price.price_type.replace('FIM_SEMANA', 'FSEMANA').split('_')[1] + ' - ' + price.price_type.replace('FIM_SEMANA', 'FSEMANA').split('_')[2] }
+    return { value: price.price_type.replace('FIM_SEMANA', 'FSEMANA').split('_')[1], label: price.price_type.replace('FIM_SEMANA', 'FSEMANA').split('_')[1] + ' - ' + price.price_type.replace('FIM_SEMANA', 'FSEMANA').split('_')[2], "id": price.price_id }
   })
-  timeOptions.unshift({ value: '0', label: 'All' })
+  timeOptions.unshift({ value: '0', label: 'All', "id": 0 })
+
+  const handleTimeFormat = (time: string, order: number) => {
+    return time.replace('FIM_SEMANA', 'FSEMANA').split('_')[order]
+  }
 
   const fieldsOptions = fields.map(field => {
     return { value: field.field_id.toString(), label: field.name }
@@ -145,10 +122,10 @@ const Reservations = () => {
   }
 
   const handleCreateReservation = (values: any) => {
-    const [hours, minutes] = values.initial_time.split('H');
-    const initial_time = `${values.date} ${hours}:${minutes}:00`
-    const end_time_timestamp = new Date(new Date(initial_time).getTime() + (2 * 60 * 60 * 1000) + (30 * 60 * 1000));
-    const end_time = end_time_timestamp.toISOString().slice(0, 19).replace('T', ' ');
+    const [init_hours, init_minutes] = handleTimeFormat(values.price_time, 1).split('H');
+    const initial_time = `${values.date} ${init_hours}:${init_minutes}:00`
+    const [end_hours, end_minutes] = handleTimeFormat(values.price_time, 2).split('H');
+    const end_time = `${values.date} ${end_hours}:${end_minutes}:00`
 
     const data = {
       fields_id: values.field_id,
@@ -165,18 +142,19 @@ const Reservations = () => {
         }
         , 1000)
       })
-      .catch(() => {
-        toast.error('Failed to create reservation')
+      .catch((response) => {
+        toast.error(response.response.data.error)
       })
   }
 
-  const handleCreateWaitlist = (values: any) => {
+  const handleCreateWaitlist = (time: any) => {
     // create a timestamp with the values.date and values.initial_time like '2021-10-10 10:00:00'
-    const interested_time = `${values.date} ${values.initial_time.split('H').join(':')}:00`
+    const [init_hours, init_minutes] = handleTimeFormat(time, 1).split('H');
+    const initial_time = `${selectedDate.value} ${init_hours}:${init_minutes}:00`
 
     const data = {
       silence: false,
-      interested_time: interested_time
+      interested_time: initial_time
     }
 
     axios.post(`${import.meta.env.VITE_API_BASE_URL}/waitlist/create`, { data: data }, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } })
@@ -194,14 +172,20 @@ const Reservations = () => {
   }
 
   useEffect(() => {
-    axios.get(`${import.meta.env.VITE_API_BASE_URL}/reservations/date/${selectedDate?.value}`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } })
+    getReservations()
+  }, [selectedDate, price_order, time_order, selectedField, selectedTime])
+
+  const getReservations = () => {
+    let order_filter = `?order_price=${price_order}&order_time=${time_order}&field_id=${selectedField?.value}&price_id=${selectedTime?.id}`
+
+    axios.get(`${import.meta.env.VITE_API_BASE_URL}/reservations/date/${selectedDate?.value}${order_filter}`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } })
       .then(response => {
         setReservations(response.data)
       })
       .catch(() => {
         toast.error('Failed to fetch reservations')
       })
-  }, [selectedDate])
+  }
 
   useEffect(() => {
     axios.get(`${import.meta.env.VITE_API_BASE_URL}/fields`, { headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` } })
@@ -211,6 +195,8 @@ const Reservations = () => {
       .catch(() => {
         toast.error('Failed to fetch fields')
       })
+
+    getReservations()
   }, [])
 
   useEffect(() => {
@@ -234,6 +220,14 @@ const Reservations = () => {
       })
   }, [])
 
+  const handleOrderChange = (e: React.ChangeEvent<HTMLSelectElement>, type: string) => {
+    if (type === 'price') {
+      setPriceOrder(e.target.value)
+    } else if (type === 'time') {
+      setTimeOrder(e.target.value)
+    }
+  }
+
   return (
     <div className={styles.main}>
       <div className={styles.table}>
@@ -243,6 +237,18 @@ const Reservations = () => {
           <SelectDropdown type='select' sendOptionsToParent={handleSelectedField} /* defaultOption={fieldsOptions[0]} */ options={fieldsOptions} label='Field' name='field' />
           <SelectDropdown type='select' sendOptionsToParent={handleSelectedDate} /* defaultOption={dataOptions[0]} */ options={dataOptions} label='Date' name='date' />
           <SelectDropdown type='select' sendOptionsToParent={handleSelectedTime} /* defaultOption={dataOptions[0]} */ options={timeOptions} label='Time' name='time' />
+          <div className={styles.order_filter}>
+          <span>Ordernar Hora</span> 
+            <select onChange={(e) => handleOrderChange(e, "time")}>
+              <option value="asc">Ascendente</option>
+              <option value="desc">Descendente</option>
+            </select>
+            <span>Ordernar preço  </span>
+            <select onChange={(e) => handleOrderChange(e, "price")}>
+              <option value="asc">Ascendente</option>
+              <option value="desc">Descendente</option>
+            </select>
+          </div>
         </div>
 
         <TableContainer component={Paper}>
@@ -259,61 +265,21 @@ const Reservations = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {
-              reservationsRows?.map((row) => (
-                row.filter(row => row.field_name === selectedField?.label || selectedField?.label === 'All').filter(row => row.initial_time === selectedTime?.value || selectedTime?.label === 'All').map((row) => {
-                  const values = {
-                    field_id: row.field_id,
-                    price_id: row.price_id,
-                    initial_time: row.initial_time,
-                    date: selectedDate?.value
-                  }
-
-                  return (
-                  <StyledTableRow key={row.price_id}>
-                      <StyledTableCell component="th" scope="row">
-                        {selectedDate.label}
-                      </StyledTableCell>
-                      <StyledTableCell align="right">{row.field_name}</StyledTableCell>
-                      <StyledTableCell align="right">{row.initial_time}</StyledTableCell>
-                      <StyledTableCell align="right">{row.end_time}</StyledTableCell>
-                      <StyledTableCell align="right">{row.price_value}</StyledTableCell>
-                      <StyledTableCell align="right">
-                        <input type='checkbox' checked={
-                          reservations.length ? reservations.map(reservation => {
-                            return (reservation.field_id === row.field_id && reservation.initial_time === row.initial_time && reservation.date === selectedDate.value)
-                          }
-                          ).includes(true) : false} disabled={
-                          reservations.length ? reservations.map(reservation => {
-                            return (reservation.field_id === row.field_id && reservation.initial_time === row.initial_time && reservation.date === selectedDate.value)
-                          }
-                          ).includes(true) : false}
-                          
-                          onChange={() => handleCreateReservation(values)} />
-                      </StyledTableCell>
-                      <StyledTableCell align="right">
-                        <input type='checkbox' checked={waitlist.map(waitlist => {
-                          // convert waitlist.interested_time to the format yyyy-mm-dd hh:mm:ss in two variables
-                          const [date, time] = new Date(waitlist.interested_time).toISOString().split('T')
-                          // convert the time to the format hhHmm
-                          const interested_time = time.split(':').slice(0, 2).join('H')
-                          // check if the waitlist is for the same field, initial_time and date
-                          console.log(interested_time, `${selectedDate.value} ${interested_time}`)
-                          return (date === selectedDate.value && interested_time === row.initial_time)
-                        }
-                        ).includes(true)} disabled={waitlist.map(waitlist => {
-                          // convert waitlist.interested_time to the format yyyy-mm-dd hh:mm:ss in two variables
-                          const [date, time] = new Date(waitlist.interested_time).toISOString().split('T')
-                          // convert the time to the format hhHmm
-                          const interested_time = time.split(':').slice(0, 2).join('H')
-                          // check if the waitlist is for the same field, initial_time and date
-                          return (date === selectedDate.value && interested_time === row.initial_time)
-                        }
-                        ).includes(true)} onChange={() => handleCreateWaitlist(values)} />
-                      </StyledTableCell>
-                    </StyledTableRow>
-                )})
-              ))}
+            {reservations?.map((row, index) => {
+              return (
+                <StyledTableRow key={index}>
+                  <StyledTableCell align="left">{selectedDate?.label}</StyledTableCell>
+                  <StyledTableCell align="right">{row.field}</StyledTableCell>
+                  <StyledTableCell align="right">{handleTimeFormat(row.time, 1)}</StyledTableCell>
+                  <StyledTableCell align="right">{handleTimeFormat(row.time, 2)}</StyledTableCell>
+                  <StyledTableCell align="right">{row.price}</StyledTableCell>
+                  <StyledTableCell align="right"><input type='checkbox' checked={row.reserved} 
+                  onChange={() => handleCreateReservation({"field_id":row.field_id, "price_id": row.price_id, "price_time": row.time, "date": selectedDate.value})}></input></StyledTableCell>
+                  <StyledTableCell align="right"><input type='checkbox' checked={row.waitlist}
+                  onChange={() => handleCreateWaitlist(row.time)}></input></StyledTableCell>
+                </StyledTableRow>
+              );
+            })}
             </TableBody>
           </Table>
         </TableContainer>

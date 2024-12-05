@@ -181,7 +181,7 @@ const Prices = () => {
   return (
     <div className={styles.main}>
       <div className={styles.table}>
-        <span>Prices</span>
+        <h2>Prices</h2>
 
         <div className={styles.flex}>
           <div className={styles.forms}>

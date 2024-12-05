@@ -14,3 +14,18 @@
   font-weight: 700;
   color: #161616;
 }
+
+.order_filter{
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 1rem !important;
+}
+
+.order_filter select{
+  height: 50%;
+  font-size: 0.7rem;
+  padding: 0.5rem;
+  border: 1px solid #161616;
+  border-radius: 5px;
+}

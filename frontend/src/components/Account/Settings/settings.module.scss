@@ -27,7 +27,6 @@
 @media (min-width: 760px) {
   .settings {
     // submit button and profile left/right 
-    >button, >div { max-width: 27rem; }
 
     @include flex(row, $align: flex-start);
     width: 100%;

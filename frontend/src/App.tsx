@@ -19,6 +19,7 @@ import Statistics from 'pages/Statistics'
 import Fields from 'pages/Fields'
 import Prices from 'pages/Prices'
 import ChangeReservations from 'pages/ChangeReservations'
+import Admin from 'pages/Admin'
 
 const App = () => {
   return (
@@ -50,6 +51,7 @@ const App = () => {
             <Route path='/statistics' element={<Statistics />} />
             <Route path='/admin-panel' element={<AdminPanel />} />
             <Route path='/account' element={<Account />} />
+            <Route path='/admin' element={<Admin />} />
           </Route>
         </Route>
       </Routes>

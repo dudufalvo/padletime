@@ -99,7 +99,7 @@ const AdminPanel = () => {
   return (
     <div className={styles.main}>
       <div className={styles.table}>
-        <span>Admin Panel</span>
+        <h2>Permissions</h2>
     
         <TableContainer component={Paper}>
           <Table sx={{ minWidth: 700 }} aria-label="customized table">
